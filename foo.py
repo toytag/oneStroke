@@ -73,6 +73,7 @@ def adj_matrix(points):
         adjacency matrix of a complete graph defined by `points`
 
     """
+    n = points.shape[0]
     adjMat = np.zeros((n, n))
     for i in range(n):
         adjMat[i, :] = np.linalg.norm(points - points[i], axis=1)
@@ -115,10 +116,10 @@ def dfs(adjMat):
 
     """
     # need improvement to 减少回头路
-    i_start = divmod(np.argmax(adjMat), len(adjMat))[0]
+    i_start = divmod(np.argmax(adjMat), adjMat.shape[0])[0]
     path, predecessors = depth_first_order(adjMat, i_start, directed=False)
     target_path = []
-    for i in range(len(path)-1):
+    for i in range(len(path) - 1):
         curVertex = path[i]
         target_path.append(curVertex)
         nextVertex = path[i+1]
@@ -165,6 +166,6 @@ def rdp(points, path, epsilon=2):
     imax = np.argmax(errNorm)
     dmax = errNorm[imax]
     if dmax >= epsilon:
-        return rdp(path[start:imax+1]) + rdp(path[imax:end+1])[1:]
+        return np.hstack((rdp(points, path[start:imax+1]), rdp(points, path[imax:end+1])[1:]))
     else:
-        return [path[start], path[end]]
+        return np.array([path[start], path[end]])
