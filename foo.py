@@ -1,10 +1,4 @@
 # This Python file uses the following encoding: utf-8
-# 这样我就可以写中文了hhhhh
-
-# no idea about naming
-# 起个名字愁死人系列，就叫foo好了。。。比hello world好点
-
-
 import cv2
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -12,7 +6,7 @@ from scipy.sparse.csgraph import minimum_spanning_tree, depth_first_order
 from oneStroke import MODEL_DIR
 
 
-def face_seg(img):
+def face_crop(img):
     """
     Find the face segement of an image.
 
@@ -23,15 +17,15 @@ def face_seg(img):
 
     Returns
     -------
-    `face_img` : 2d numpy array 
-        grayscale image resized to 200x200
+    `face_crop` : 2d numpy array 
+        grayscale image resized to 256x256
 
     """
     face_cascade = cv2.CascadeClassifier(MODEL_DIR)
     faces = face_cascade.detectMultiScale(img, 1.1, 4)
     (x, y, w, h) = faces[np.argmax(faces[:,-1])]
-    face_img = cv2.resize(img[int(y-0.1*h):int(y+1.1*h), int(x-0.1*w):int(x+1.1*w)], (200, 200))
-    return face_img
+    face_crop = cv2.resize(img[int(y-0.1*h):int(y+1.1*h), int(x-0.1*w):int(x+1.1*w)], (256, 256))
+    return face_crop
 
 
 def edge_detect(img):
