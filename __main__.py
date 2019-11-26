@@ -9,6 +9,6 @@ path_index = dfs(mst(adj_matrix(edge_points)))
 path = edge_points[path_index]
 
 print("len of original path: {}".format(len(path)))
-for eps in [0.5, 1, 1.5, 2, 3, 5, 10]:
+for eps in [0.5, 1, 1.5, 2, 2.56, 3, 5, 10]:
     downsample_path = rdp(path, epsilon=eps)
     print("eplison = {} \t len of downsampled path: {}".format(eps, len(downsample_path)))

@@ -125,17 +125,15 @@ def dfs(adjMat):
     return target_path
 
 
-def rdp(path, epsilon=2):
+def rdp(path, epsilon=2.56):
     """
     Use [Ramer–Douglas–Peucker algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm)
     to downsample points on path.
 
     Parameters
     ----------
-    `points` : 2d numpy array 
-        a set of (x, y) coordinates
-    `path` : 1d numpy array 
-        a path of indices of points
+    `path` : 2d numpy array 
+        a set of (x, y) coordinates in a specific order
     `epsilon` : positive real number
         maximum tolerance of error
 
