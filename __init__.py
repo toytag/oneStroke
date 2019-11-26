@@ -13,5 +13,5 @@ Fail to import oneStroke.
 
 del os
 
-from .foo import face_seg, edge_detect, adj_matrix, mst, dfs, rdp
-__all__ = ['face_seg', 'edge_detect', 'adj_matrix', 'mst', 'dfs', 'rdp']
+from .foo import face_crop, edge_detect, adj_matrix, mst, dfs, rdp
+__all__ = ['face_crop', 'edge_detect', 'adj_matrix', 'mst', 'dfs', 'rdp']
