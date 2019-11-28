@@ -4,7 +4,7 @@ Use *oneStroke drawing*, to draw a portrait.
 
 ## Description
 
-All the implementations are in `foo.py` (don't have a better name). 
+All the implementations are in `foo.py`. 
 
 In `dev` branch, there is a `GLHF/` folder containing a jupyter notebook that will help you get a better feeling of this implementation. 
 
