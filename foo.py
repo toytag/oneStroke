@@ -23,6 +23,9 @@ def face_crop(img):
     """
     face_cascade = cv2.CascadeClassifier(MODEL_DIR)
     faces = face_cascade.detectMultiScale(img, 1.1, 4)
+    if faces == ():
+        print("No face founded\nexit with code 0")
+        exit(0)
     (x, y, w, h) = faces[np.argmax(faces[:,-1])]
     face_crop = cv2.resize(img[int(y-0.1*h):int(y+1.1*h), int(x-0.1*w):int(x+1.1*w)], (256, 256))
     return face_crop
@@ -52,25 +55,25 @@ def edge_detect(img):
     return edge_points
 
 
-def adj_matrix(points):
+def adj_matrix(vertices):
     """
-    Find the adjacency matrix of a complete graph defined by a set of points.
+    Find the adjacency matrix of a complete graph defined by a set of vertices.
 
     Parameters
     ----------
-    `points` : 2d numpy array 
+    `vertices` : 2d numpy array 
         a set of (x, y) coordinates
 
     Returns
     -------
     `adjMat` : scipy sparse matrix 
-        adjacency matrix of a complete graph defined by `points`
+        adjacency matrix of a complete graph defined by `vertices`
 
     """
-    n = points.shape[0]
+    n = vertices.shape[0]
     adjMat = np.zeros((n, n))
     for i in range(n):
-        adjMat[i, :] = np.linalg.norm(points - points[i], axis=1)
+        adjMat[i, :] = np.linalg.norm(vertices - vertices[i], axis=1)
     adjMat = csr_matrix(adjMat)
     return adjMat
 
@@ -105,37 +108,35 @@ def dfs(adjMat):
 
     Returns
     -------
-    `target_path` : 1d numpy array 
+    `target_path_index` : 1d numpy array 
         a path of indices of points that walk through the graph in depth first order
 
     """
     # need improvement to 减少回头路
     i_start = divmod(np.argmax(adjMat), adjMat.shape[0])[0]
-    path, predecessors = depth_first_order(adjMat, i_start, directed=False)
-    target_path = []
-    for i in range(len(path) - 1):
-        curVertex = path[i]
-        target_path.append(curVertex)
-        nextVertex = path[i+1]
+    path_index, predecessors = depth_first_order(adjMat, i_start, directed=False)
+    target_path_index = []
+    for i in range(len(path_index) - 1):
+        curVertex = path_index[i]
+        target_path_index.append(curVertex)
+        nextVertex = path_index[i+1]
         while predecessors[nextVertex] != curVertex:
             curVertex = predecessors[curVertex]
-            target_path.append(curVertex)
-    target_path.append(path[-1])
-    target_path = np.array(target_path)
-    return target_path
+            target_path_index.append(curVertex)
+    target_path_index.append(path_index[-1])
+    target_path_ = np.array(target_path_index)
+    return target_path_index
 
 
-def rdp(points, path, epsilon=2):
+def rdp(path, epsilon=2.56):
     """
     Use [Ramer–Douglas–Peucker algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm)
     to downsample points on path.
 
     Parameters
     ----------
-    `points` : 2d numpy array 
+    `path` : 2d numpy array 
         a set of (x, y) coordinates
-    `path` : 1d numpy array 
-        a path of indices of points
     `epsilon` : positive real number
         maximum tolerance of error
 
@@ -152,14 +153,15 @@ def rdp(points, path, epsilon=2):
     """
     start = 0
     end = len(path) - 1
-    vec1 = (points[path[end]] - points[path[start]]).reshape(-1,1)
-    vecs = points[path] - points[path[start]]
+    vec1 = (path[end] - path[start]).reshape(-1,1)
+    vecs = path - path[start]
     projMat = vec1.dot(vec1.T) / np.linalg.norm(vec1) ** 2
     errVec = (np.eye(2) - projMat).dot(vecs.T)
     errNorm = np.linalg.norm(errVec.T, axis=1)
     imax = np.argmax(errNorm)
     dmax = errNorm[imax]
     if dmax >= epsilon:
-        return np.hstack((rdp(points, path[start:imax+1]), rdp(points, path[imax:end+1])[1:]))
+        return np.vstack((rdp(path[start:imax+1], epsilon), 
+                          rdp(path[imax:end+1], epsilon)[1:]))
     else:
-        return np.array([path[start], path[end]])
+        return np.vstack((path[start], path[end]))

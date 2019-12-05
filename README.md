@@ -4,7 +4,7 @@ Use *oneStroke drawing*, to draw a portrait.
 
 ## Description
 
-All the implementations are in `foo.py` (don't have a better name). 
+All the implementations are in `foo.py`. 
 
 Unfortunately this implementation does not find a Euler path, even if the graph is somehow Eulerian graph. (by somehow I mean almost impossible, unless magic) 
 
