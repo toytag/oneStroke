@@ -1,4 +1,6 @@
 # This Python file uses the following encoding: utf-8
+from __future__ import division, absolute_import, print_function
+
 import cv2
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -21,12 +23,17 @@ def face_crop(img):
         grayscale image resized to 256x256
 
     """
+    enhanced_img = cv2.equalizeHist(img)
     face_cascade = cv2.CascadeClassifier(MODEL_DIR)
-    faces = face_cascade.detectMultiScale(img, 1.1, 4)
+    faces = face_cascade.detectMultiScale(enhanced_img, 1.3, 5)
     if faces == ():
         print("No face founded\nexit with code 0")
         exit(0)
     (x, y, w, h) = faces[np.argmax(faces[:,-1])]
+    height, width = img.shape
+    if int(y-0.1*h) < 0 or int(y+1.1*h) >= height or int(x-0.1*w) < 0 or int(x+1.1*w) >= width:
+        print("Face not complete\nexit with code 0")
+        exit(0)
     face_crop = cv2.resize(img[int(y-0.1*h):int(y+1.1*h), int(x-0.1*w):int(x+1.1*w)], (256, 256))
     return face_crop
 
@@ -46,8 +53,23 @@ def edge_detect(img):
         a set of (x, y) coordinates
 
     """
+    # gamma = 1.7
+    # img = img ** (1 / gamma)
+    # cv2.normalize(img, img, 0, 255, norm_type=cv2.NORM_MINMAX)
+    # img = np.uint8(img)
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8, 8))
+    img = clahe.apply(img)
+    # img = cv2.equalizeHist(img)
+    cv2.imwrite("new.png", img)
+
     blur_img = cv2.bilateralFilter(img, 7, 50, 50)
-    edge_img = cv2.Canny(blur_img, 30, 60)
+
+    # Auto Canny
+    _, thr = cv2.threshold(blur_img, 0, 1, cv2.THRESH_OTSU)
+    lowerThres = np.mean(blur_img[thr==0])
+    upperThres = np.mean(blur_img[thr==1])
+    edge_img = cv2.Canny(blur_img, lowerThres, upperThres)
+
     edge_indexs = np.argwhere(edge_img != 0)
     edge_points = np.zeros(edge_indexs.shape)
     edge_points[:,0] = edge_indexs[:,1]
