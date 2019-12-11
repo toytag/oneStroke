@@ -11,7 +11,7 @@ from oneStroke import HAARCASCADE_MODEL_DIR, DARK_JSON_DIR, DARK_H5_DIR
 
 def face_crop(img):
     """
-    Find the face.
+    Find the face & back ground reduction.
 
     Parameters
     ----------
