@@ -3,14 +3,15 @@ from __future__ import division, absolute_import, print_function
 
 import cv2
 import numpy as np
+from tensorflow.keras.models import model_from_json, load_model
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree, depth_first_order
-from oneStroke import MODEL_DIR
+from oneStroke import HAARCASCADE_MODEL_DIR, DARK_JSON_DIR, DARK_H5_DIR
 
 
 def face_crop(img):
     """
-    Find the face segement of an image.
+    Find the face.
 
     Parameters
     ----------
@@ -23,18 +24,27 @@ def face_crop(img):
         grayscale image resized to 256x256
 
     """
-    enhanced_img = cv2.equalizeHist(img)
-    face_cascade = cv2.CascadeClassifier(MODEL_DIR)
-    faces = face_cascade.detectMultiScale(enhanced_img, 1.3, 5)
+    he_img = cv2.equalizeHist(img)
+    face_cascade = cv2.CascadeClassifier(HAARCASCADE_MODEL_DIR)
+    faces = face_cascade.detectMultiScale(he_img, 1.1, 4)
     if faces == ():
         print("No face founded\nexit with code 0")
         exit(0)
     (x, y, w, h) = faces[np.argmax(faces[:,-1])]
     height, width = img.shape
-    if int(y-0.1*h) < 0 or int(y+1.1*h) >= height or int(x-0.1*w) < 0 or int(x+1.1*w) >= width:
+    if int(y-0.15*h) < 0 or int(y+1.15*h) >= height or int(x-0.15*w) < 0 or int(x+1.15*w) >= width:
         print("Face not complete\nexit with code 0")
         exit(0)
-    face_crop = cv2.resize(img[int(y-0.1*h):int(y+1.1*h), int(x-0.1*w):int(x+1.1*w)], (256, 256))
+    face_crop = cv2.resize(img[int(y-0.15*h):int(y+1.15*h), int(x-0.15*w):int(x+1.15*w)], (256, 256))
+
+    # human matting
+    with open(DARK_JSON_DIR, 'r') as f:
+        json_string = f.read()
+    model = model_from_json(json_string)
+    model.load_weights(DARK_H5_DIR)
+    res = np.argmax(model.predict(face_crop[np.newaxis,:,:,np.newaxis].astype(np.float32)), axis=3)[0]
+    face_crop[res == 0] = 0
+
     return face_crop
 
 
@@ -53,27 +63,26 @@ def edge_detect(img):
         a set of (x, y) coordinates
 
     """
-    # gamma = 1.7
-    # img = img ** (1 / gamma)
-    # cv2.normalize(img, img, 0, 255, norm_type=cv2.NORM_MINMAX)
-    # img = np.uint8(img)
-    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8, 8))
+    # image enhancement
+    # contrast limited adaptive histogram equivalisation
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     img = clahe.apply(img)
-    # img = cv2.equalizeHist(img)
+
+    # debugging
     cv2.imwrite("new.png", img)
 
     blur_img = cv2.bilateralFilter(img, 7, 50, 50)
 
     # Auto Canny
     _, thr = cv2.threshold(blur_img, 0, 1, cv2.THRESH_OTSU)
-    lowerThres = np.mean(blur_img[thr==0])
-    upperThres = np.mean(blur_img[thr==1])
-    edge_img = cv2.Canny(blur_img, lowerThres, upperThres)
+    lowerThreshold = np.mean(blur_img[thr==0])
+    upperThreshold = np.mean(blur_img[thr==1])
+    edge_img = cv2.Canny(blur_img, lowerThreshold, upperThreshold)
 
-    edge_indexs = np.argwhere(edge_img != 0)
-    edge_points = np.zeros(edge_indexs.shape)
-    edge_points[:,0] = edge_indexs[:,1]
-    edge_points[:,1] = img.shape[0] - edge_indexs[:,0]
+    edge_indexes = np.argwhere(edge_img != 0)
+    edge_points = np.zeros(edge_indexes.shape)
+    edge_points[:,0] = edge_indexes[:,1]
+    edge_points[:,1] = img.shape[0] - edge_indexes[:,0]
     return edge_points
 
 
@@ -134,7 +143,6 @@ def dfs(adjMat):
         a path of indices of points that walk through the graph in depth first order
 
     """
-    # need improvement to 减少回头路
     i_start = divmod(np.argmax(adjMat), adjMat.shape[0])[0]
     path_index, predecessors = depth_first_order(adjMat, i_start, directed=False)
     target_path_index = []
@@ -168,7 +176,7 @@ def rdp(path, epsilon=2.56):
 
     Note
     ------
-    Sometimes, if the path goes back and forth, the implementaion may not work properly.
+    Sometimes, if the path goes back and forth, the implementation may not work properly.
     Say if the path starts at one point, goes wherever it want and ends at the exact
     point it starts, the implementation would just give you that point.
 
