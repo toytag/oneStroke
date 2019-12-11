@@ -1,21 +1,38 @@
-import sys, cv2
+# This Python file uses the following encoding: utf-8
+from __future__ import division, absolute_import, print_function
+
+import sys
+import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 from oneStroke import *
 
 img_path = sys.argv[1]
 
 img = cv2.imread(img_path, 0)
+
 edge_points = edge_detect(face_crop(img))
+x, y = edge_points.T
+plt.cla()
+plt.axis("equal")
+plt.scatter(x, y, s=2)
+plt.savefig("edge.png")
+print("--- picture \"edge.png\" saved ---")
+
 path_index = dfs(mst(adj_matrix(edge_points)))
 path = edge_points[path_index]
-
-print("len of original path: {}".format(len(path)))
-for eps in [0.5, 1, 1.5, 2, 2.56, 3, 5, 10]:
-    downsample_path = rdp(path, epsilon=eps)
-    print("eplison = {} \t len of downsampled path: {}".format(eps, len(downsample_path)))
-
-x, y = rdp(path).T
+x, y = path.T
+plt.cla()
 plt.axis("equal")
-plt.plot(x, y, c='tab:blue')
-plt.savefig("oneStroke.png")
-print("--- picture \"oneStroke.png\" saved ---")
+plt.plot(x, y, linewidth=2)
+plt.savefig("path.png")
+print("--- picture \"path.png\" saved ---")
+
+downsampled_path = rdp(path)
+print(len(downsampled_path))
+x, y = downsampled_path.T
+plt.cla()
+plt.axis("equal")
+plt.plot(x, y, linewidth=2.56)
+plt.savefig("rdp.png")
+print("--- picture \"rdp.png\" saved ---")
