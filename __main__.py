@@ -37,8 +37,8 @@ plt.plot(x, y, linewidth=2.56)
 plt.savefig("rdp.png")
 print("--- picture \"rdp.png\" saved ---")
 
-with open('path.txt', 'w') as f:
-    f.write('[[')
-    for i in downsampled_path:
-        f.write('[{},{}]'.format(i[1], 256-i[0]))
-    f.write(']]')
+# with open('path.txt', 'w') as f:
+#     f.write('[[')
+#     for i in downsampled_path:
+#         f.write('[{},{}],'.format(i[1], 256-i[0]))
+#     f.write(']]')
