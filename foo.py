@@ -71,6 +71,7 @@ def edge_detect(img):
 
     # debugging
     cv2.imwrite("new.png", img)
+    print("--- picture \"new.png\" saved ---")
 
     blur_img = cv2.bilateralFilter(img, 7, 50, 50)
 
