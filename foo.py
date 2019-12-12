@@ -24,9 +24,10 @@ def face_crop(img):
         grayscale image resized to 256x256
 
     """
+    # histogram equalization
     he_img = cv2.equalizeHist(img)
     face_cascade = cv2.CascadeClassifier(HAARCASCADE_MODEL_DIR)
-    faces = face_cascade.detectMultiScale(he_img, 1.1, 4)
+    faces = face_cascade.detectMultiScale(he_img, 1.3, 5)
     if faces == ():
         print("No face founded\nexit with code 0")
         exit(0)
@@ -64,7 +65,7 @@ def edge_detect(img):
 
     """
     # image enhancement
-    # contrast limited adaptive histogram equivalisation
+    # contrast limited adaptive histogram equalization
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     img = clahe.apply(img)
 
