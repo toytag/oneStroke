@@ -24,10 +24,31 @@ def face_crop(img):
         grayscale image resized to 256x256
 
     """
-    # histogram equalization
-    he_img = cv2.equalizeHist(img)
+    # resize img
+    presetRatio = np.array([1/2, 9/16, 3/4, 1, 4/3, 16/9, 2])
+    presetSize = [(256, 512), (288, 512), (384, 512),
+                  (256, 256), (512, 384), (512, 288), (512, 256)]
+    ratio = img.shape[1] / img.shape[0]
+    ratioIndex = np.argmin(np.abs(ratio - presetRatio))
+    img_shape = presetSize[ratioIndex]
+    img = cv2.resize(img, img_shape)
+
+    # human matting
+    with open(DARK_JSON_DIR, 'r') as f:
+        json_string = f.read()
+    model = model_from_json(json_string)
+    model.load_weights(DARK_H5_DIR)
+    res = np.argmax(model.predict(img[np.newaxis,:,:,np.newaxis].astype(np.float32)), axis=3)[0]
+    img[res == 0] = 0
+
+    # ------ debugging ------
+    cv2.imwrite("net.png", img)
+    print("--- picture \"net.png\" saved ---")
+    # -----------------------
+
+    # crop face
     face_cascade = cv2.CascadeClassifier(HAARCASCADE_MODEL_DIR)
-    faces = face_cascade.detectMultiScale(he_img, 1.3, 5)
+    faces = face_cascade.detectMultiScale(img, 1.3, 5)
     if faces == ():
         print("No face founded\nexit with code 0")
         exit(0)
@@ -38,13 +59,10 @@ def face_crop(img):
         exit(0)
     face_crop = cv2.resize(img[int(y-0.15*h):int(y+1.15*h), int(x-0.15*w):int(x+1.15*w)], (256, 256))
 
-    # human matting
-    with open(DARK_JSON_DIR, 'r') as f:
-        json_string = f.read()
-    model = model_from_json(json_string)
-    model.load_weights(DARK_H5_DIR)
-    res = np.argmax(model.predict(face_crop[np.newaxis,:,:,np.newaxis].astype(np.float32)), axis=3)[0]
-    face_crop[res == 0] = 0
+    # ------ debugging ------
+    cv2.imwrite("face.png", face_crop)
+    print("--- picture \"face.png\" saved ---")
+    # -----------------------
 
     return face_crop
 
@@ -69,12 +87,12 @@ def edge_detect(img):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     img = clahe.apply(img)
 
-    # debugging
-    cv2.imwrite("new.png", img)
-    print("--- picture \"new.png\" saved ---")
+    # ------ debugging ------
+    cv2.imwrite("clahe.png", img)
+    print("--- picture \"clahe.png\" saved ---")
+    # -----------------------
 
     blur_img = cv2.bilateralFilter(img, 7, 50, 50)
-
     # Auto Canny
     _, thr = cv2.threshold(blur_img, 0, 1, cv2.THRESH_OTSU)
     lowerThreshold = np.mean(blur_img[thr==0])
