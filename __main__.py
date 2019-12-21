@@ -10,6 +10,14 @@ from oneStroke import *
 img_path = sys.argv[1]
 
 img = cv2.imread(img_path, 0)
+# resize img
+presetRatio = np.array([1/2, 9/16, 3/4, 1, 4/3, 16/9, 2])
+presetSize = [(256, 512), (288, 512), (384, 512),
+                (256, 256), (512, 384), (512, 288), (512, 256)]
+ratio = img.shape[1] / img.shape[0]
+ratioIndex = np.argmin(np.abs(ratio - presetRatio))
+img_shape = presetSize[ratioIndex]
+img = cv2.resize(img, img_shape)
 
 # comment out the line below if no face
 img = face_crop(img)

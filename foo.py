@@ -24,15 +24,6 @@ def face_crop(img):
         grayscale image resized to 256x256
 
     """
-    # resize img
-    presetRatio = np.array([1/2, 9/16, 3/4, 1, 4/3, 16/9, 2])
-    presetSize = [(256, 512), (288, 512), (384, 512),
-                  (256, 256), (512, 384), (512, 288), (512, 256)]
-    ratio = img.shape[1] / img.shape[0]
-    ratioIndex = np.argmin(np.abs(ratio - presetRatio))
-    img_shape = presetSize[ratioIndex]
-    img = cv2.resize(img, img_shape)
-
     # human matting
     with open(DARK_JSON_DIR, 'r') as f:
         json_string = f.read()
