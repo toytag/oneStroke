@@ -18,3 +18,6 @@ Basically, it's just `opencv-python`, `numpy`, `scipy`. Not too many dependencie
 
 ## Last But Not The Least
 Good Luck Have Fun :)
+
+The package is used on the robotics project to generate one stroke portrait path.  
+Check out the website: https://sites.google.com/berkeley.edu/ee106a-roboart/vision/one-stroke-portrait
